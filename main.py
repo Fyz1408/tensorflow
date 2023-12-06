@@ -28,6 +28,88 @@ def trainingSet():
     plt.show()
 
 
+# Display image with predicted label
+def plot_image(i, predictions_array, true_label, img):
+    true_label, img = true_label[i], img[i]
+    plt.grid(False)
+    plt.xticks([])
+    plt.yticks([])
+
+    plt.imshow(img, cmap=plt.cm.binary)
+
+    predicted_label = np.argmax(predictions_array)
+    if predicted_label == true_label:
+        color = 'blue'
+    else:
+        color = 'red'
+
+    plt.xlabel(
+        "{} {:2.0f}% ({})".format(
+            class_names[predicted_label],
+            100 * np.max(predictions_array),
+            class_names[true_label]
+        ),
+        color=color
+    )
+
+
+# Display predictions graph
+def plot_value_array(i, predictions_array, true_label):
+    true_label = true_label[i]
+    plt.grid(False)
+    plt.xticks(range(10))
+    plt.yticks([])
+    thisplot = plt.bar(range(10), predictions_array, color="#777777")
+    plt.ylim([0, 1])
+    predicted_label = np.argmax(predictions_array)
+
+    thisplot[predicted_label].set_color('red')
+    thisplot[true_label].set_color('blue')
+
+
+# Guess a single clothing item from the given index with probability
+def image(index):
+    plt.figure(figsize=(6, 3))
+    plt.subplot(1, 2, 1)
+    plot_image(index, predictions[index], test_labels, test_images)
+    plt.subplot(1, 2, 2)
+    plot_value_array(index, predictions[index], test_labels)
+    plt.show()
+
+
+# Guesses multiple images depending on the rows and columns given
+def multiple(num_rows, num_cols):
+    # Plot the first X test images, their predicted labels, and the true labels.
+    # Color correct predictions in blue and incorrect predictions in red.
+    num_images = num_rows * num_cols
+    plt.figure(figsize=(2 * 2 * num_cols, 2 * num_rows))
+    for i in range(num_images):
+        plt.subplot(num_rows, 2 * num_cols, 2 * i + 1)
+        plot_image(i, predictions[i], test_labels, test_images)
+        plt.subplot(num_rows, 2 * num_cols, 2 * i + 2)
+        plot_value_array(i, predictions[i], test_labels)
+    plt.tight_layout()
+    plt.show()
+
+# Use the trained model to predict a image from the data set
+def predictSingleImage(index):
+    img = test_images[index]
+    print(img.shape)
+
+    # Add the image to a batch where it's the only member.
+    img = (np.expand_dims(img, 0))
+
+    print(img.shape)
+    predictions_single = probability_model.predict(img)
+
+    print(predictions_single)
+
+    plot_value_array(1, predictions_single[0], test_labels)
+    _ = plt.xticks(range(10), class_names, rotation=45)
+    plt.show()
+    np.argmax(predictions_single[0])
+
+
 if __name__ == '__main__':
     print('Tensor flow version: ' + tf.__version__)
 
@@ -60,3 +142,10 @@ if __name__ == '__main__':
     # Evaluate accuracy
     test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
     print('\nTest accuracy:', test_acc)
+
+    probability_model = tf.keras.Sequential([model, tf.keras.layers.Softmax()])
+    predictions = probability_model.predict(test_images)
+
+    #image(34)
+    #predictSingleImage(4)
+    multiple(5, 4)
